@@ -44,6 +44,7 @@
     "medusa-payment-stripe": "6.0.10",
     "medusa-plugin-wishlist": "^1.1.44",
     "prism-react-renderer": "^2.0.4",
+    "react-hook-form": "^7.52.1",
     "typeorm": "0.3.16"
   },
   "devDependencies": {
