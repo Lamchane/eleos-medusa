@@ -87,7 +87,7 @@ const CollectionVisualForm = ({ defaultValues, onSubmit }) => {
                 id="display_priority"
                 type="number"
                 {...register("displayPriority")}
-                placeholder="eg: Hero , Body"
+                placeholder="eg: Hero, Featured"
               />
             </div>
             <div className="flex flex-col gap-y-2">

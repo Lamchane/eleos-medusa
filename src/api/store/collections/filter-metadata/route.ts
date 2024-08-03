@@ -3,7 +3,7 @@ import {
   type MedusaRequest,
   type MedusaResponse,
 } from "@medusajs/medusa";
-import { EntityManager, JsonContains } from "typeorm";
+import { EntityManager, In, JsonContains } from "typeorm";
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const manager: EntityManager = req.scope.resolve("manager");
@@ -14,9 +14,17 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   jsonSearchObject["isVisible"] = true;
 
   const displaySection = req.query?.displaySection as string;
+  let displaySectionCondition = "";
   if (displaySection) {
-    jsonSearchObject["displaySection"] = displaySection;
+    const displaySections = displaySection.split(",");
+    const conditions = displaySections.map(
+      (section) =>
+        `collection.metadata->>'displaySection' LIKE '%${section.trim()}%'`
+    );
+    displaySectionCondition = conditions.join(" OR ");
   }
+
+  console.log(displaySectionCondition);
 
   const skip = req.query.offset ?? 0;
   const take = req.query.limit ?? 0;
@@ -32,10 +40,15 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
 
   const query = collectionsRepo.createQueryBuilder("collection");
 
+  query.where("collection.metadata @> :jsonSearchObject", {
+    jsonSearchObject: JSON.stringify(jsonSearchObject),
+  });
+
+  if (displaySectionCondition) {
+    query.andWhere(`(${displaySectionCondition})`);
+  }
+
   query
-    .where("collection.metadata @> :jsonSearchObject", {
-      jsonSearchObject: JSON.stringify(jsonSearchObject),
-    })
     .orderBy("CAST(collection.metadata->>'displayPriority' AS INTEGER)", "ASC")
     .skip(skip as number)
     .take(take as number);
@@ -45,7 +58,6 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       query.leftJoinAndSelect(`collection.${relation}`, relation);
     });
   }
-
   const [collections, count] = await query.getManyAndCount();
 
   return res.json({
