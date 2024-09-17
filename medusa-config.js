@@ -70,10 +70,24 @@ const plugins = [
       key_secret: process.env.RAZORPAY_SECRET,
       razorpay_account: process.env.RAZORPAY_ACCOUNT,
       webhook_secret: process.env.RAZORPAY_SECRET,
-      capture: true,
       automatic_expiry_period: 30, // any value between 12 minutes and 30 days expressed in minutes/
       manual_expiry_period: 20,
       refund_speed: "normal",
+    },
+  },
+  {
+    resolve: `medusa-fulfillment-shiprocket`,
+    options: {
+      channel_id: process.env.SHIPROCKET_CHANNEL_ID, //(required)
+      email: process.env.SHIPROCKET_EMAIL, //(required)
+      password: process.env.SHIPROCKET_PASSWORD, //(required)
+      token: "", //(required. leave empty)
+      pricing: "flat_rate", //"flat_rate" or "calculated" (required)
+      length_unit: "cm", //"mm", "cm" or "inches" (required)
+      multiple_items: "split_shipment", //"single_shipment" or "split_shipment"(default) (required)
+      inventory_sync: false, //true or false(default) (required)
+      forward_action: "create_order", //'create_fulfillment' or 'create_order'(default) (required)
+      return_action: "create_order", //'create_fulfillment' or 'create_order'(default) (required)
     },
   },
 ];
@@ -104,9 +118,15 @@ const projectConfig = {
   redis_url: REDIS_URL,
 };
 
+const featureFlags = {
+  tax_inclusive_pricing: true,
+  product_categories: true,
+};
+
 /** @type {import('@medusajs/medusa').ConfigModule} */
 module.exports = {
   projectConfig,
   plugins,
   modules,
+  featureFlags,
 };
