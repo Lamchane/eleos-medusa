@@ -37,12 +37,6 @@ const plugins = [
   `medusa-fulfillment-manual`,
   `medusa-payment-manual`,
   `medusa-plugin-wishlist`,
-  // {
-  //   resolve: `@medusajs/file-local`,
-  //   options: {
-  //     upload_dir: "uploads",
-  //   },
-  // },
   {
     resolve: "@medusajs/admin",
     /** @type {import('@medusajs/admin').PluginOptions} */
@@ -88,6 +82,39 @@ const plugins = [
       inventory_sync: false, //true or false(default) (required)
       forward_action: "create_order", //'create_fulfillment' or 'create_order'(default) (required)
       return_action: "create_order", //'create_fulfillment' or 'create_order'(default) (required)
+    },
+  },
+  {
+    resolve: `medusa-plugin-meilisearch`,
+    options: {
+      config: {
+        host: process.env.MEILISEARCH_HOST,
+        apiKey: process.env.MEILISEARCH_API_KEY,
+      },
+      settings: {
+        products: {
+          indexSettings: {
+            searchableAttributes: ["title", "description", "variant_sku"],
+            displayedAttributes: [
+              "title",
+              "description",
+              "variant_sku",
+              "thumbnail",
+              "handle",
+            ],
+          },
+          primaryKey: "id",
+          transformer: (product) => ({
+            id: product.id,
+            title: product.title,
+            description: product.description,
+            variant_sku: product.variant_sku,
+            thumbnail: product.thumbnail,
+            handle: product.handle,
+            // include other attributes as needed
+          }),
+        },
+      },
     },
   },
 ];
