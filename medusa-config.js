@@ -96,6 +96,7 @@ const plugins = [
           indexSettings: {
             searchableAttributes: ["title", "description", "variant_sku"],
             displayedAttributes: [
+              "id",
               "title",
               "description",
               "variant_sku",
@@ -113,6 +114,19 @@ const plugins = [
             handle: product.handle,
             // include other attributes as needed
           }),
+        },
+      },
+    },
+  },
+  {
+    resolve: `medusa-plugin-sendgrid-typescript`,
+    options: {
+      api_key: process.env.SENDGRID_API_KEY,
+      from: process.env.SENDGRID_FROM,
+      templates: {
+        order_placed_template: {
+          id: process.env.SENDGRID_ORDER_PLACED_ID,
+          subject: "Thank you for your order #{display_id}!",
         },
       },
     },
