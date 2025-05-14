@@ -50,6 +50,7 @@
     "medusa-plugin-wishlist": "^1.1.44",
     "medusa-react": "^9.0.18",
     "prism-react-renderer": "^2.0.4",
+    "razorpay": "^2.9.6",
     "react-hook-form": "^7.52.1",
     "typeorm": "0.3.16"
   },

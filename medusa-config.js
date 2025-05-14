@@ -148,7 +148,19 @@ const modules = {
   },
 };
 
-/** @type {import('@medusajs/medusa').ConfigModule["projectConfig"]} */
+/**
+ * @typedef {import('@medusajs/medusa').ConfigModule["projectConfig"] & {
+ *   key_id?: string;
+ *   key_secret?: string;
+ *   razorpay_account?: string;
+ *   webhook_secret?: string;
+ *   automatic_expiry_period?: number;
+ *   manual_expiry_period?: number;
+ *   refund_speed?: string;
+ * }} ExtendedProjectConfig
+ */
+
+/** @type {ExtendedProjectConfig} */
 const projectConfig = {
   jwt_secret: process.env.JWT_SECRET || "supersecret",
   cookie_secret: process.env.COOKIE_SECRET || "supersecret",
@@ -157,6 +169,15 @@ const projectConfig = {
   admin_cors: ADMIN_CORS,
   // Uncomment the following lines to enable REDIS
   redis_url: REDIS_URL,
+
+  // razorpay
+  key_id: process.env.RAZORPAY_ID,
+  key_secret: process.env.RAZORPAY_SECRET,
+  razorpay_account: process.env.RAZORPAY_ACCOUNT,
+  webhook_secret: process.env.RAZORPAY_SECRET,
+  automatic_expiry_period: 30, // any value between 12 minutes and 30 days expressed in minutes/
+  manual_expiry_period: 20,
+  refund_speed: "normal",
 };
 
 const featureFlags = {
