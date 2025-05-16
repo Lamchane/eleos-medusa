@@ -166,13 +166,35 @@ class MagicCheckout extends AbstractPaymentProcessor {
 
     const sessionNotes = paymentSessionData.notes as Record<string, string>;
 
+    const { items } = await this.cartService.retrieve(resource_id);
+
     const intentRequest: Orders.RazorpayOrderCreateRequestBody & {
       payment_capture?: Orders.RazorpayCapturePayment;
     } = {
       amount: Math.round(amount),
       currency: currency_code.toUpperCase(),
+      receipt: resource_id,
       notes: { ...sessionNotes, resource_id },
       line_items_total: Math.round(amount),
+      line_items: items.map((item) => ({
+        type: "",
+        product_url: "",
+        sku: item.variant.sku,
+        variant_id: item.variant_id,
+        price: item.unit_price.toString(),
+        offer_price: item.subtotal.toString(),
+        tax_amount: item.tax_total,
+        quantity: item.quantity,
+        name: item.title,
+        description: item.description,
+        image_url: item.thumbnail,
+        weight: item.variant.weight?.toString(),
+        dimensions: {
+          length: item.variant.length?.toString(),
+          width: item.variant.width?.toString(),
+          height: item.variant.height?.toString(),
+        },
+      })),
       payment: {
         capture: this.options_.auto_capture ? "automatic" : "manual",
         capture_options: {
