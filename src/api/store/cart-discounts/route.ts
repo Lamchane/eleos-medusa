@@ -49,9 +49,9 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     const paymentSession = await query.getOneOrFail();
     cart_id = paymentSession.cart_id;
   } catch (e) {
-    return res.status(400).json({
+    return res.status(405).json({
       failure_code: "INVALID_PROMOTION",
-      failure_reason: "Invalid discount code or cart ID",
+      failure_reason: "payment session not found",
     });
   }
 
@@ -71,9 +71,9 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   });
 
   if (!discount || !cart) {
-    return res.status(400).json({
+    return res.status(404).json({
       failure_code: "INVALID_PROMOTION",
-      failure_reason: "Invalid discount code or cart ID",
+      failure_reason: "discount or cart not found",
     });
   }
 
