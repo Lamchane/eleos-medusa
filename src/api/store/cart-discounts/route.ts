@@ -1,11 +1,17 @@
-import type {
-  MedusaRequest,
-  MedusaResponse,
-  DiscountService,
-  CartService,
+import {
+  type MedusaRequest,
+  type MedusaResponse,
+  type DiscountService,
+  type CartService,
+  PaymentSession,
 } from "@medusajs/medusa";
+import { decorateCartTotals } from "@medusajs/utils";
+import { EntityManager } from "typeorm";
 
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
+  const manager: EntityManager = req.scope.resolve("manager");
+  const paymentSessionRepo = manager.getRepository(PaymentSession);
+
   const cartService: CartService = req.scope.resolve("cartService");
   const discountService: DiscountService = req.scope.resolve("discountService");
 
@@ -28,9 +34,41 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   }
 
   // try to apply the discount code
+  let cart_id = null;
 
-  const cart = await cartService.retrieve(order_id as string);
-  const discount = await discountService.retrieveByCode(code as string);
+  const jsonSearchObject = {};
+  jsonSearchObject["id"] = order_id;
+
+  const query = paymentSessionRepo.createQueryBuilder("payment_session");
+
+  query.where("payment_session.data @> :jsonSearchObject", {
+    jsonSearchObject: JSON.stringify(jsonSearchObject),
+  });
+
+  try {
+    const paymentSession = await query.getOneOrFail();
+    cart_id = paymentSession.cart_id;
+  } catch (e) {
+    return res.status(400).json({
+      failure_code: "INVALID_PROMOTION",
+      failure_reason: "Invalid discount code or cart ID",
+    });
+  }
+
+  const cart = await cartService.retrieve(cart_id, {
+    relations: [
+      "discounts",
+      "discounts.rule",
+      "items",
+      "items.adjustments",
+      "items.variant",
+      "shipping_methods",
+      "region",
+    ],
+  });
+  const discount = await discountService.retrieveByCode(code as string, {
+    relations: ["rule", "regions"],
+  });
 
   if (!discount || !cart) {
     return res.status(400).json({
@@ -40,22 +78,40 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   }
 
   try {
-    discountService.validateDiscountForCartOrThrow(cart, discount);
-    cartService.applyDiscount(cart, discount.code);
+    await cartService.applyDiscounts(cart, [discount.code]);
+    const updated_cart = await cartService.retrieve(cart.id, {
+      relations: [
+        "items",
+        "items.adjustments",
+        "shipping_methods",
+        "region",
+        "discounts",
+      ],
+    });
 
-    const updated_cart = await cartService.retrieve(order_id as string);
+    const cart_with_totals = decorateCartTotals({
+      ...updated_cart,
+      shipping_methods: updated_cart.shipping_methods.map((method) => ({
+        amount: method.total,
+        ...method,
+      })),
+    });
+
+    console.log(updated_cart);
+    console.log(cart_with_totals);
 
     return res.json({
       promotion: {
         reference_id: discount.id,
         type: "coupon",
         code: discount.code,
-        value: updated_cart.discount_total,
+        value: Number(cart_with_totals.discount_total ?? 0),
         value_type: discount.rule.type,
         description: discount.rule.description,
       },
     });
   } catch (error) {
+    console.log(error);
     return res.status(400).json({
       failure_code: "INVALID_PROMOTION",
       failure_reason:
