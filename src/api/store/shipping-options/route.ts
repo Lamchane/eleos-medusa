@@ -20,28 +20,25 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
       admin_only: false,
     });
 
-    console.log("addresess from rzp:", addresses);
+    console.log("addresess from rzp: ", addresses);
+    console.log("options: ", options);
 
     const shipping_response = {
       addresses: addresses.map((address) => ({
         ...address,
         shipping_methods: options.map((option) => ({
           id: option.id,
-          name: option.name,
           description: "Free Shipping",
+          name: option.name,
           serviceable: true,
           shipping_fee: option.amount,
           cod: option.metadata.cod === "true",
           cod_fee: Number(option.metadata.cod_fee ?? 0),
         })),
-        serviceable: true,
-        shipping_fee: options[0].amount,
-        cod: options[0].metadata.cod,
-        cod_fee: options[0].metadata.cod_fee,
       })),
     };
 
-    console.log(shipping_response);
+    console.log("response: ", JSON.stringify(shipping_response));
 
     return res.json(shipping_response);
   } catch (error) {
