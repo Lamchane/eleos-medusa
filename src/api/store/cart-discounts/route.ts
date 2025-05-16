@@ -34,26 +34,26 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   }
 
   // try to apply the discount code
-  let cart_id = null;
+  let cart_id = order_id as string;
 
-  const jsonSearchObject = {};
-  jsonSearchObject["id"] = order_id;
+  //   const jsonSearchObject = {};
+  //   jsonSearchObject["id"] = order_id;
 
-  const query = paymentSessionRepo.createQueryBuilder("payment_session");
+  //   const query = paymentSessionRepo.createQueryBuilder("payment_session");
 
-  query.where("payment_session.data @> :jsonSearchObject", {
-    jsonSearchObject: JSON.stringify(jsonSearchObject),
-  });
+  //   query.where("payment_session.data @> :jsonSearchObject", {
+  //     jsonSearchObject: JSON.stringify(jsonSearchObject),
+  //   });
 
-  try {
-    const paymentSession = await query.getOneOrFail();
-    cart_id = paymentSession.cart_id;
-  } catch (e) {
-    return res.status(405).json({
-      failure_code: "INVALID_PROMOTION",
-      failure_reason: "payment session not found",
-    });
-  }
+  //   try {
+  //     const paymentSession = await query.getOneOrFail();
+  //     cart_id = paymentSession.cart_id;
+  //   } catch (e) {
+  //     return res.status(405).json({
+  //       failure_code: "INVALID_PROMOTION",
+  //       failure_reason: "payment session not found",
+  //     });
+  //   }
 
   const cart = await cartService.retrieve(cart_id, {
     relations: [
