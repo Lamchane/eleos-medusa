@@ -136,12 +136,19 @@ class MagicCheckout extends AbstractPaymentProcessor {
       paymentIntent = await this.razorpay_.orders.fetch(orderId);
     }
 
-    switch (paymentIntent.status) {
+    switch (
+      paymentIntent.status as unknown as
+        | Orders.RazorpayOrder["status"]
+        | "placed"
+    ) {
       // created' | 'authorized' | 'captured' | 'refunded' | 'failed'
       case "created":
         return PaymentSessionStatus.REQUIRES_MORE;
 
       case "paid":
+        return PaymentSessionStatus.AUTHORIZED;
+
+      case "placed":
         return PaymentSessionStatus.AUTHORIZED;
 
       case "attempted":
